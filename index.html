@@ -37,19 +37,21 @@
         };
 
         //Variables
-        
+
 
         var game = new Phaser.Game(config);
 
         function preload ()
         {
         this.load.image('background', 'assets/backgrounds/desert.jpg');
-        this.load.image('player', 'assets/naruto_sprite.png');
+        this.load.image('player', 'assets/naruto_sprite.png', { frameWidth: 48, frameHeight: 64 });
+        this.load.image('star', 'assets/shuriken.png');
         }
 
         function create ()
         {
-
+        //  A simple background for our game
+        this.add.image(400, 300, 'background');
         }
 
         function update ()
