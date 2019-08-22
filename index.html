@@ -23,7 +23,7 @@ var config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 500 },
-            debug: false
+            debug: true
         }
     },
     scene: {
@@ -52,6 +52,7 @@ function preload ()
     this.load.spritesheet('naruto_stand', 'assets/naruto_sprite_stand.png', { frameWidth: 48, frameHeight: 52 });
     this.load.spritesheet('naruto_walk', 'assets/naruto_sprite_walk.png', { frameWidth: 48, frameHeight: 52 });
     this.load.spritesheet('naruto_walk_inverse', 'assets/naruto_sprite_walk_inverse.png', { frameWidth: 48, frameHeight: 52 });
+    this.load.spritesheet('naruto_jump', 'assets/naruto_sprite_jump.png', { frameWidth: 54, frameHeight: 52 });
 }
 
 function create ()
@@ -72,8 +73,15 @@ function create ()
     platforms.create(650, 300, 'grass').setScale(0.5).refreshBody();
     platforms.create(750, 960, 'grass').setScale(0.5).refreshBody();
 
+    //Steel Platforms
+    platforms.create(250, 1440, 'steel').setScale(0.5).refreshBody();
+    platforms.create(650, 1220, 'steel').setScale(0.5).refreshBody();
+    platforms.create(440, 1680, 'steel').setScale(0.5).refreshBody();
+    platforms.create(560, 1920, 'steel').setScale(0.5).refreshBody();
+
     // The player and its settings
-    player = this.physics.add.sprite(100, 222, 'naruto');
+    player = this.physics.add.sprite(640, 222, 'naruto');
+    player.setSize(48, 52, true);
 
     //  Player physics properties. Give the little guy a slight bounce.
     player.setBounce(0.1);
@@ -90,12 +98,20 @@ function create ()
         key: 'turn',
         //frames: [ { key: 'naruto_stand', frame: 0 } ],
         frames: this.anims.generateFrameNumbers('naruto_stand', { start: 0, end: 3 }),
-        frameRate: 20
+        frameRate: 10,
+        repeat: -1
     });
 
     this.anims.create({
         key: 'right',
         frames: this.anims.generateFrameNumbers('naruto_walk', { start: 0, end: 5 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'up',
+        frames: this.anims.generateFrameNumbers('naruto_jump', { start: 0, end: 5 }),
         frameRate: 10,
         repeat: -1
     });
@@ -107,17 +123,13 @@ function create ()
 
     //  Collide the player and with the platforms
     this.physics.add.collider(player, platforms);
-    this.physics.add.collider(bombs, platforms);
 
     //Follow cam
-    this.cameras.main.setBounds(0, 0, 1280, 4000);
+    this.cameras.main.setBounds(0, 0, 1280, 2890);
 
-    for (x = 0; x < 2; x++)
-    {
-        this.add.image(1280 * x, 0, 'bg').setOrigin(0);
-    }
 
-    this.cameras.main.startFollow(player, true);
+
+    this.cameras.main.startFollow(player, true, 0.05, 0.05);
     this.cameras.main.setZoom(1);
 
     if (this.cameras.main.deadzone)
