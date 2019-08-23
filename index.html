@@ -1,187 +1,268 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8" />
-    <title>Area51Raid Game</title>
-    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
-    <style type="text/css">
-        body {
-            margin: 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Area51Raid Game</title>
+  <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+  <style type="text/css">
+    body {
+      margin: 0;
+      text-align: center;
+      background-color: pink;
+      background-image: url(assets/backgrounds/area51_wallpaper_alternate.jpg);
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+  </style>
 </head>
+
 <body>
 
-<script type="text/javascript">
-
-var config = {
-    type: Phaser.AUTO,
-    width: 1280,
-    height: 720,
-    pixelArt: true,
-    physics: {
+  <script type="text/javascript">
+    var config = {
+      type: Phaser.AUTO,
+      width: 1280,
+      height: 720,
+      pixelArt: true,
+      physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 500 },
-            debug: false
+          gravity: {
+            y: 350
+          },
+          debug: false
         }
-    },
-    scene: {
+      },
+      scene: {
         preload: preload,
         create: create,
         update: update
+      }
+    };
+
+    var player;
+    var alien;
+    var graphics;
+    var bombs;
+    var spikep;
+    var spike;
+    var platforms;
+    var cursors;
+    var gameOver = false;
+    var moveCam = false;
+
+    var game = new Phaser.Game(config);
+
+    function preload() {
+      this.load.image('background', 'assets/backgrounds/background.png');
+      this.load.image('ground', 'assets/platform.png');
+      this.load.image('grass', 'assets/platform_grass.png');
+      this.load.image('steel', 'assets/platform_steel.png');
+      this.load.image('spike', 'assets/spike_sprite.png');
+      this.load.spritesheet('naruto_stand', 'assets/naruto_sprite_stand.png', {
+        frameWidth: 48,
+        frameHeight: 52
+      });
+      this.load.spritesheet('naruto_walk', 'assets/naruto_sprite_walk.png', {
+        frameWidth: 48,
+        frameHeight: 52
+      });
+      this.load.spritesheet('naruto_walk_inverse', 'assets/naruto_sprite_walk_inverse.png', {
+        frameWidth: 48,
+        frameHeight: 52
+      });
+      this.load.spritesheet('naruto_run', 'assets/naruto_sprite_run.png', {
+        frameWidth: 60,
+        frameHeight: 52
+      });
+      this.load.spritesheet('naruto_run_inverse', 'assets/naruto_sprite_run_inverse.png', {
+        frameWidth: 60,
+        frameHeight: 52
+      });
+      this.load.spritesheet('naruto_jump', 'assets/naruto_sprite_jump.png', {
+        frameWidth: 56,
+        frameHeight: 52
+      });
+      this.load.spritesheet('alien_walk', 'assets/alien_walk.png', {
+        frameWidth: 40,
+        frameHeight: 35
+      });
     }
-};
 
-var player;
-var graphics;
-var bombs;
-var platforms;
-var cursors;
-var gameOver = false;
-var moveCam = false;
+    function create() {
+      //  A simple background for our game
+      this.add.image(640, 1440, 'background');
 
-var game = new Phaser.Game(config);
+      //  The platforms group contains the ground and the 2 ledges we can jump on
+      platforms = this.physics.add.staticGroup();
 
-function preload ()
-{
-    this.load.image('background', 'assets/backgrounds/background.png');
-    this.load.image('ground', 'assets/platform.png');
-    this.load.image('grass', 'assets/platform_grass.png');
-    this.load.image('steel', 'assets/platform_steel.png');
-    this.load.spritesheet('naruto_stand', 'assets/naruto_sprite_stand.png', { frameWidth: 48, frameHeight: 52 });
-    this.load.spritesheet('naruto_walk', 'assets/naruto_sprite_walk.png', { frameWidth: 48, frameHeight: 52 });
-    this.load.spritesheet('naruto_walk_inverse', 'assets/naruto_sprite_walk_inverse.png', { frameWidth: 48, frameHeight: 52 });
-    this.load.spritesheet('naruto_run', 'assets/naruto_sprite_run.png', { frameWidth: 60, frameHeight: 52 });
-    this.load.spritesheet('naruto_run_inverse', 'assets/naruto_sprite_run_inverse.png', { frameWidth: 60, frameHeight: 52 });
-    this.load.spritesheet('naruto_jump', 'assets/naruto_sprite_jump.png', { frameWidth: 56, frameHeight: 52 });
-}
+      //  Here we create the ground.
+      //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+      platforms.create(640, 2880, 'ground').setScale(1).refreshBody();
 
-function create ()
-{
-    //  A simple background for our game
-    this.add.image(640, 1440, 'background');
+      //  Now let's create some ledges
+      platforms.create(650, 300, 'grass').setScale(0.5).refreshBody();
+      platforms.create(250, 720, 'grass').setScale(0.5).refreshBody();
+      platforms.create(1100, 720, 'grass').setScale(0.5).refreshBody();
+      platforms.create(900, 1000, 'grass').setScale(0.5).refreshBody();
+      platforms.create(200, 1300, 'grass').setScale(0.5).refreshBody();
+      platforms.create(1200, 1500, 'grass').setScale(0.5).refreshBody();
 
-    //  The platforms group contains the ground and the 2 ledges we can jump on
-    platforms = this.physics.add.staticGroup();
+      //Steel Platforms
+      platforms.create(400, 1500, 'steel').setScale(0.2).refreshBody();
+      platforms.create(700, 1500, 'steel').setScale(0.2).refreshBody();
+      platforms.create(0, 1600, 'steel').setScale(0.6).refreshBody();
+      platforms.create(100, 2220, 'steel').setScale(0.2).refreshBody();
+      platforms.create(400, 2400, 'steel').setScale(0.2).refreshBody();
+      platforms.create(600, 2600, 'steel').setScale(0.2).refreshBody();
+      platforms.create(200, 2800, 'steel').setScale(0.2).refreshBody();
 
-    //  Here we create the ground.
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    platforms.create(640, 2880, 'ground').setScale(1).refreshBody();
+      //Spike Trap
+      platforms.create(20, 1250, 'spike').setScale(2).refreshBody();
+      platforms.create(200, 1250, 'spike').setScale(2).refreshBody();
+      platforms.create(360, 1250, 'spike').setScale(2).refreshBody();
 
-    //  Now let's create some ledges
-    platforms.create(250, 720, 'grass').setScale(0.5).refreshBody();
-    platforms.create(1100, 720, 'grass').setScale(0.5).refreshBody();
-    platforms.create(650, 300, 'grass').setScale(0.5).refreshBody();
-    platforms.create(750, 960, 'grass').setScale(0.5).refreshBody();
+      // The player and its settings
+      player = this.physics.add.sprite(640, 222, 'naruto');
+      player.setSize(48, 52, true);
+      player.setBounce(0.1);
 
-    //Steel Platforms
-    platforms.create(250, 1440, 'steel').setScale(0.5).refreshBody();
-    platforms.create(650, 1220, 'steel').setScale(0.5).refreshBody();
-    platforms.create(440, 1680, 'steel').setScale(0.5).refreshBody();
-    platforms.create(560, 1920, 'steel').setScale(0.5).refreshBody();
+      // Adds the alien
+      alien = this.physics.add.sprite(300, 580, 'alien_walk');
+      alien = this.physics.add.sprite(800, 580, 'alien_walk');
+      //alien.setsize(40, 35, true);
 
-    // The player and its settings
-    player = this.physics.add.sprite(640, 222, 'naruto');
-    player.setSize(48, 52, true);
+      // Adds the spike
+      spikep = this.physics.add.image(400, 222, 'spike');
+      spikep = this.physics.add.image(400, 1280, 'spike');
 
-    //  Player physics properties. Give the little guy a slight bounce.
-    player.setBounce(0.1);
+      //  Collide the player and with the platforms
+      this.physics.add.collider(player, platforms);
+      this.physics.add.collider(spikep, platforms);
+      // this.physics.add.collider(spike, platforms);
+      this.physics.add.collider(alien, platforms);
+      this.physics.add.collider(player, spikep, hitSpike, null, this);
+      this.physics.add.collider(player, spike, hitSpike, null, this);
+      this.physics.add.collider(player, alien, hitAlien, null, this);
+      // //
+      //  Player physics properties. Give the little guy a slight bounce.
 
-    //  Our player animations, turning, walking left and walking right.
-    this.anims.create({
+      //  Our player animations, turning, walking left and walking right.
+      this.anims.create({
         key: 'left',
-        frames: this.anims.generateFrameNumbers('naruto_run_inverse', { start: 0, end: 5 }),
+        frames: this.anims.generateFrameNumbers('naruto_run_inverse', {
+          start: 0,
+          end: 5
+        }),
         frameRate: 10,
         repeat: -1
-    });
+      });
 
-    this.anims.create({
+      this.anims.create({
         key: 'right',
-        frames: this.anims.generateFrameNumbers('naruto_run', { start: 0, end: 5 }),
+        frames: this.anims.generateFrameNumbers('naruto_run', {
+          start: 0,
+          end: 5
+        }),
         frameRate: 10,
         repeat: -1
-    });
+      });
 
-    this.anims.create({
+      this.anims.create({
         key: 'stand',
-        frames: this.anims.generateFrameNumbers('naruto_stand', { start: 0, end: 6 }),
+        frames: this.anims.generateFrameNumbers('naruto_stand', {
+          start: 0,
+          end: 6
+        }),
         frameRate: 10,
         repeat: -1
-    });
+      });
 
-    this.anims.create({
+      this.anims.create({
         key: 'jump',
-        frames: this.anims.generateFrameNumbers('naruto_jump', { start: 0, end: 3 }),
+        frames: this.anims.generateFrameNumbers('naruto_jump', {
+          start: 0,
+          end: 3
+        }),
         frameRate: 10,
-    });
+      });
 
-    //  Input Events
-    cursors = this.input.keyboard.createCursorKeys();
+      this.anims.create({
+        key: 'a_walk',
+        frames: this.anims.generateFrameNumbers('alien_walk', {
+          start: 0,
+          end: 3
+        }),
+        frameRate: 10,
+      });
 
-    bombs = this.physics.add.group();
+      //  Input Events
+      cursors = this.input.keyboard.createCursorKeys();
 
-    //  Collide the player and with the platforms
-    this.physics.add.collider(player, platforms);
+      spike = this.physics.add.group();
+      alien = this.physics.add.group();
 
-    //Follow cam
-    this.cameras.main.setBounds(0, 0, 1280, 2890);
+      //Follow cam
+      this.cameras.main.setBounds(0, 0, 1280, 2890);
+      this.cameras.main.startFollow(player, true, 0.05, 0.05);
+      this.cameras.main.setZoom(1);
 
-
-
-    this.cameras.main.startFollow(player, true, 0.05, 0.05);
-    this.cameras.main.setZoom(1);
-
-    if (this.cameras.main.deadzone)
-    {
+      if (this.cameras.main.deadzone) {
         graphics = this.add.graphics().setScrollFactor(0);
         graphics.lineStyle(2, 0x00ff00, 1);
         graphics.strokeRect(200, 200, this.cameras.main.deadzone.width, this.cameras.main.deadzone.height);
+      }
+      text = this.add.text(220, 240).setScrollFactor(0).setFontSize(16).setColor('#ffffff');;
     }
 
-    text = this.add.text(220, 240).setScrollFactor(0).setFontSize(16).setColor('#ffffff');;
-}
+    function update() {
 
-function update ()
-{
-
-    //Movement
-    if (gameOver)
-    {
+      //Movement
+      if (gameOver) {
         return;
-    }
+      }
 
-    if (cursors.left.isDown)
-    {
+      if (cursors.left.isDown) {
         player.setVelocityX(-420);
-
         player.anims.play('left', true);
-    }
-    else if (cursors.right.isDown)
-    {
+      } else if (cursors.right.isDown) {
         player.setVelocityX(420);
 
         player.anims.play('right', true);
-    }
-    else
-    {
+      } else {
         player.setVelocityX(0);
-
         player.anims.play('stand', true);
-    }
+      }
 
-    if (cursors.up.isDown && player.body.touching.down)
-    {
+      if (cursors.up.isDown && player.body.touching.down) {
         player.setVelocityY(-330);
-    }
-    else if(player.body.velocity.y <= -1 || player.body.velocity.y >= 1)
-    {
+      } else if (player.body.velocity.y <= -1 || player.body.velocity.y >= 1) {
         player.anims.play('jump', true);
+      }
     }
 
-}
+    function hitSpikep(player, spikep) {
+      this.physics.pause();
+      player.setTint(0xff0000);
+      //player.anims.play('turn');
+      gameOver = true;
+    }
 
-</script>
+    function hitSpike(player, spike) {
+      this.physics.pause();
+      player.setTint(0xff0000);
+      //player.anims.play('turn');
+      gameOver = true;
+    }
+
+    function hitAlien(player, alien) {
+      this.physics.pause();
+      player.setTint(0xff0000);
+      gameOver = true;
+    }
+  </script>
 
 </body>
+
 </html>
